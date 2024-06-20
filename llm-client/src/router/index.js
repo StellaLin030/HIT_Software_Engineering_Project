@@ -9,7 +9,8 @@ import Logout from '../components/Logout.vue';
 import Feedback from '../components/Feedback.vue'; // 将FeedbackForm改为FeedbackComponent
 import AdminFeedback from '../components/AdminFeedback.vue';
 import AdminUserInfo from '../components/UserInformation.vue';
-
+import AdminUnreadFeedback from '../components/AdminUnreadFeedback.vue';
+import UserCreaseInfo from '../components/UserCreaseInfo.vue';
 Vue.use(VueRouter)
 
 const routes = [
@@ -22,6 +23,9 @@ const routes = [
   { path: '/feedback', name: 'Feedback', component: Feedback }, // 这里改为FeedbackComponent
   { path: '/admin-feedback', name: 'AdminFeedback', component: AdminFeedback },
   { path: '/admin-userinfo', name: 'AdminUserInfo', component: AdminUserInfo },
+  { path: '/admin-unreadfeedback', name: 'AdminUnreadFeedback', component: AdminUnreadFeedback },
+  { path: '/admin-creaseuserinfo', name: 'UserCreaseInfo', component: UserCreaseInfo },
+
 ]
 
 const router = new VueRouter({
