@@ -2,7 +2,7 @@
   <div>
     <div class="top-bar">
       <div class="left">
-        <span>ChatWithAIs V1 | 一站式大语言模型访问平台</span>
+        <span>ChatWithAIs V2 | 一站式大语言模型访问平台</span>
       </div>
       <div class="right">
         <button @click="goBack" class="home-link">返回</button>
@@ -19,6 +19,7 @@
           <p><strong>用户编号：</strong> {{ user.id }}</p>
           <p><strong>用户名：</strong> {{ user.username }}</p>
           <p><strong>是否为管理员：</strong> {{ user.is_admin ? '是' : '否' }}</p>
+          <p><strong>创建时间：</strong> {{ user.create_time }}</p>
           <!-- 其他用户信息 -->
         </li>
       </ul>

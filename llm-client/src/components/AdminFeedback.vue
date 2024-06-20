@@ -2,7 +2,7 @@
   <div>
     <div class="top-bar">
       <div class="left">
-        <span>ChatWithAIs V1 | 一站式大语言模型访问平台</span>
+        <span>ChatWithAIs V2 | 一站式大语言模型访问平台</span>
       </div>
       <div class="right">
         <button @click="goBack" class="home-link">返回</button>
