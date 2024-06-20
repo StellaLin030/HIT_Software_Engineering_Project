@@ -1,32 +1,11 @@
 <template>
 
   <div class="home">
-    <div class="sidebar">
-      <div class="sidebar-header">
-        <h2>历史聊天记录</h2>
-        <transition name="button-fade">
-          <el-button type="primary" icon="el-icon-edit" @click="CreateNewAndSave">创建并保存</el-button>
-        </transition>
-      </div>
-      <!-- 左侧侧边栏内容 -->
-      <div class="sidebar-list">
-        <ul>
-          <li v-for="(theme, index) in themes" :key="index">
-            <div :class="{ 'theme-container': true, 'selected-theme': theme.id === current_id }">
-              <a :href="'#'+theme.id" class="truncate-text"
-                 @click.prevent="get_conversation(theme.id)">{{ theme.summary }}</a>
-              <el-button type="danger" icon="el-icon-delete" @click="deleteConversation(theme.id)"></el-button>
-            </div>
-          </li>
-        </ul>
-      </div>
-    </div>
-    
     <div class="home-right">
 
       <div class="right-version">
         <div class="llm-chat-demo">
-          <span class="chat-demo">ChatWithAIs</span><span class="version"> V1</span>
+          <span class="chat-demo">ChatWIthAIs</span><span class="version"> V1</span>
         </div>
 
         <!-- 添加登出和反馈按钮 -->
@@ -40,47 +19,47 @@
         <div class="container">
           <div class="left">
             <div v-for="(message, index) in wenxin_messages" class="main-message" :key="index"
-                 :class="{'user-message': message.role === 'user', 'friend-message': message.role === 'assistant'}">
+                 :class="{'user-message': message.sender === 'user', 'friend-message': message.sender === 'friend'}">
               <!-- 显示用户标识和图片 -->
-              <div class="message-role"
-                   :class="{'user-message': message.role === 'user', 'friend-message': message.role === 'assistant'}">
-                <img v-if="message.role === 'user'" src="@/assets/我的.png" alt="User Icon">
-                <img v-else-if="message.role === 'assistant'" src="@/assets/文心一言.png" alt="Friend Icon">
-                <span class="message-role-name"
-                      :class="message.role === 'user' ? 'user-color' : 'friend-color'">{{ message.role }}:</span>
+              <div class="message-sender"
+                   :class="{'user-message': message.sender === 'user', 'friend-message': message.sender === 'friend'}">
+                <img v-if="message.sender === 'user'" src="@/assets/我的.png" alt="User Icon">
+                <img v-else-if="message.sender === 'friend'" src="@/assets/文心一言.png" alt="Friend Icon">
+                <span class="message-sender-name"
+                      :class="message.sender === 'user' ? 'user-color' : 'friend-color'">{{ message.sender }}:</span>
               </div>
-              <div v-if="message.role === 'user'" class="user-message">{{ message.content }}</div>
-              <div v-else class="friend-message" v-html="renderMessage(message.content)"></div>
+              <div v-if="message.sender === 'user'" class="user-message">{{ message.content }}</div>
+              <div v-else class="friend-message" v-html="message.content"></div>
             </div>
           </div>
           <div class="mid">
             <div v-for="(message, index) in tongyi_messages" class="main-message" :key="index"
-                 :class="{'user-message': message.role === 'user', 'friend-message': message.role === 'assistant'}">
+                 :class="{'user-message': message.sender === 'user', 'friend-message': message.sender === 'friend'}">
               <!-- 显示用户标识和图片 -->
-              <div class="message-role"
-                   :class="{'user-message': message.role === 'user', 'friend-message': message.role === 'assistant'}">
-                <img v-if="message.role === 'user'" src="@/assets/我的.png" alt="User Icon">
-                <img v-else-if="message.role === 'assistant'" src="@/assets/通义千问.png" alt="Friend Icon">
-                <span class="message-role-name"
-                      :class="message.role === 'user' ? 'user-color' : 'friend-color'">{{ message.role }}:</span>
+              <div class="message-sender"
+                   :class="{'user-message': message.sender === 'user', 'friend-message': message.sender === 'friend'}">
+                <img v-if="message.sender === 'user'" src="@/assets/我的.png" alt="User Icon">
+                <img v-else-if="message.sender === 'friend'" src="@/assets/通义千问.png" alt="Friend Icon">
+                <span class="message-sender-name"
+                      :class="message.sender === 'user' ? 'user-color' : 'friend-color'">{{ message.sender }}:</span>
               </div>
-              <div v-if="message.role === 'user'" class="user-message">{{message.content }}</div>
-              <div v-else class="friend-message" v-html="renderMessage(message.content)"></div>
+              <div v-if="message.sender === 'user'" class="user-message">{{ message.content }}</div>
+              <div v-else class="friend-message" v-html="message.content"></div>
             </div>
           </div>
           <div class="right">
             <div v-for="(message, index) in chatgpt_messages" class="main-message" :key="index"
-                 :class="{'user-message': message.role === 'user', 'friend-message': message.role === 'assistant'}">
+                 :class="{'user-message': message.sender === 'user', 'friend-message': message.sender === 'friend'}">
               <!-- 显示用户标识和图片 -->
-              <div class="message-role"
-                   :class="{'user-message': message.role === 'user', 'friend-message': message.role === 'assistant'}">
-                <img v-if="message.role === 'user'" src="@/assets/我的.png" alt="User Icon">
-                <img v-else-if="message.role === 'assistant'" src="@/assets/chatgpt.png" alt="Friend Icon">
-                <span class="message-role-name"
-                      :class="message.role === 'user' ? 'user-color' : 'friend-color'">{{ message.role }}:</span>
+              <div class="message-sender"
+                   :class="{'user-message': message.sender === 'user', 'friend-message': message.sender === 'friend'}">
+                <img v-if="message.sender === 'user'" src="@/assets/我的.png" alt="User Icon">
+                <img v-else-if="message.sender === 'friend'" src="@/assets/chatgpt.png" alt="Friend Icon">
+                <span class="message-sender-name"
+                      :class="message.sender === 'user' ? 'user-color' : 'friend-color'">{{ message.sender }}:</span>
               </div>
-              <div v-if="message.role === 'user'" class="user-message">{{ message.content }}</div>
-              <div v-else class="friend-message" v-html="renderMessage(message.content)"></div>
+              <div v-if="message.sender === 'user'" class="user-message">{{ message.content }}</div>
+              <div v-else class="friend-message" v-html="message.content"></div>
             </div>
           </div>
         </div>
@@ -110,7 +89,6 @@ import markdownItTaskLists from 'markdown-it-task-lists';
 import markdownItAbbr from 'markdown-it-abbr';
 import markdownItContainer from 'markdown-it-container';
 import hljs from 'highlight.js';
-import axios from 'axios';
 import markdownItHighlightjs from 'markdown-it-highlightjs';
 import router from '../router';
 
@@ -120,7 +98,7 @@ export default {
   computed: {
     // 将 Markdown 文本渲染为 HTML
     html() {
-      return this.md.render(this.messages);
+      return this.md.render(this.message);
     }
   },
   data() {
@@ -131,10 +109,8 @@ export default {
           .use(markdownItAbbr)
           .use(markdownItContainer, 'warning')
           .use(markdownItHighlightjs, {hljs}), // 添加 markdown-it-highlightjs 插件
-      current_id: null,
       queryKeyword: '',
       tempResult: {},
-      flag:0,
       loading: false,
       wenxin_messages: [],
       tongyi_messages:[],
@@ -142,155 +118,15 @@ export default {
       socket: null,
       eventSource: null, // 添加事件源变量
       stopIcon: '@/assets/等待.png',
-      uploadIcon: '@/assets/上传.png',
-      themes: [], // 存储从数据库中获取的主题列表
+      uploadIcon: '@/assets/上传.png'
     }
   },
-  created() {
-    // 在组件实例化后立即运行一次 fetchThemes()
-    this.fetchThemes();
-  },
   methods: {
-   
-    get_conversation(themeId){
-      this.flag=0;
-      this.current_id=themeId;
-      // 发起 HTTP GET 请求到后端路由 /conversations/get_conversation
-      fetch(`/api/conversations/get_conversation?id=${themeId}`, {
-        method: 'GET',
-        credentials: 'include' // 如果使用会话进行身份验证，则包括 cookies
-      })
-      .then(response => {
-        if (!response.ok) {
-          throw new Error('Network response was not ok');
-        }
-        return response.json();
-      })
-      .then(data => {
-        // 在这里处理从后端获取的对话记录数据
-
-        this.chatgpt_messages=data.chatgpt_messages;
-
-        this.tongyi_messages=data.tongyi_messages;
-
-        this.wenxin_messages=data.wenxin_messages;
-
-      })
-      .catch(error => {
-        // 处理错误情况
-        console.error('Error:', error.message);
-      });
-  },
-
-    fetchThemes() {
-      // 发起 GET 请求到后端路由
-      fetch('/api/conversations/get_conversation_summary', {
-          method: 'GET',
-          credentials: 'include' // Include cookies if using sessions for authentication
-        })
-        .then(response => {
-          if (!response.ok) {
-            throw new Error('Network response was not ok');
-          }
-          return response.json();
-        })
-        .then(data => {
-          // 在这里处理返回的聊天记录数据
-          // 假设返回的数据格式为 [{ id: 1, summary: '主题1' }, { id: 2, summary: '主题2' }, ...]
-          this.themes = data;
-        })
-        .catch(error => {
-          console.error('Error:', error.message);
-        });
-    },
-    //对话id一定是在保存时在后端设置的，所以前端创建新对话时id设置为null
-    //假如当前id不为null，那么就是旧对话，应该更新相应对话id的内容，而不是增加保存记录
-    //假如当前id为null，那么就是新对话，增加保存记录
-    CreateNewAndSave() {
-      if (this.current_id == null) {
-          // 如果当前ID为null，创建新对话
-          fetch('/api/conversations/new_conversation', {
-              method: 'POST',
-              headers: {
-                  'Content-Type': 'application/json'
-              }
-          })
-          .then(response => {
-              if (!response.ok) {
-                  throw new Error('Failed to create and save conversation');
-              }
-              return response.json();
-          })
-          .then(data => {
-              alert('Conversation created and saved successfully.');
-              this.messages_chatgpt = [];
-          
-              this.messages_tongyi = [];
-              this.messages_wenxin = [];
-              this.current_id = null;  // 保存新创建对话的ID
-              window.location.reload();
-              this.fetchThemes();
-          })
-          .catch(error => {
-              console.error('Error:', error.message);
-              alert('Failed to create and save conversation');
-          });
-      } else {
-          // 如果当前ID不为null，更新已有对话
-          fetch(`/api/conversations/update_conversation?id=`+this.current_id , {
-              method: 'PUT',
-              headers: {
-                  'Content-Type': 'application/json'
-              },
-          })
-          .then(response => {
-              if (!response.ok) {
-                  throw new Error('Failed to update conversation');
-              }
-              return response.json();
-          })
-          .then(data => {
-              alert('Conversation updated successfully.');
-              this.messages_chatgpt = [];
-              this.messages_tongyi = [];
-              this.messages_wenxin = [];
-              this.current_id=null;
-              window.location.reload();
-              this.fetchThemes();
-          })
-          .catch(error => {
-              console.error('Error:', error.message);
-              alert('Failed to update conversation');
-          });
-      }
-  },
-     renderMessage(message) {
-      // 这里假设 this.md 是你的 markdown 渲染器
-      if(this.current_id==null || this.flag){
-        return message;
-      }
-      return this.md.render(message);
-  },
-
-  deleteConversation(id) {
-      axios.delete(`api/conversations/delete_conversation?id=`+id)
-        .then(response => {
-          console.log(response.data.message);
-          // 如果需要，在这里可以更新界面上的数据或者进行其他操作
-        })
-        .catch(error => {
-          console.error('Error deleting conversation:', error);
-        });
-      window.location.reload();
-      this.fetchThemes();
-    },
-
     async handleSearch() {
       // 如果正在加载中，则不执行新的搜索操作
       if (this.loading) {
         return;
       }
-      this.flag=1;
 
       const keyword = this.queryKeyword;
       this.loading = true;
@@ -300,33 +136,33 @@ export default {
         let wenxin_sseMessage = {
           orgcontent: '',
           content: '',
-          role: 'assistant',
+          sender: 'friend',
           zxakey: zxakey
         };
         let tongyi_sseMessage = {
           orgcontent: '',
           content: '',
-          role: 'assistant',
+          sender: 'friend',
           zxakey: zxakey
         };
         let chatgpt_sseMessage = {
           orgcontent: '',
           content: '',
-          role: 'assistant',
+          sender: 'friend',
           zxakey: zxakey
         };
 
         this.wenxin_messages.push({
           content: keyword,
-          role: 'user'
+          sender: 'user'
         });
         this.tongyi_messages.push({
           content: keyword,
-          role: 'user'
+          sender: 'user'
         });
         this.chatgpt_messages.push({
           content: keyword,
-          role: 'user'
+          sender: 'user'
         });
 
         this.$nextTick(() => {
@@ -335,7 +171,7 @@ export default {
 
         let wenxin_friendMessage = wenxin_sseMessage;
         // 创建一个新的 EventSource 实例
-        this.wenxin_eventSource = new EventSource('/api/wenxin?query=' + keyword,{ withCredentials: true });
+        this.wenxin_eventSource = new EventSource('/api/wenxin?query=' + keyword);
         // 设置消息事件监听器
         this.wenxin_eventSource.onmessage = (event) => {
           try {
@@ -365,7 +201,7 @@ export default {
         };
         let tongyi_friendMessage = tongyi_sseMessage;
         // 创建一个新的 EventSource 实例
-        this.tongyi_eventSource = new EventSource('/api/tongyi?query=' + keyword,{ withCredentials: true });
+        this.tongyi_eventSource = new EventSource('/api/tongyi?query=' + keyword);
         // 设置消息事件监听器
         this.tongyi_eventSource.onmessage = (event) => {
           try {
@@ -395,7 +231,7 @@ export default {
         };
         let chatgpt_friendMessage = chatgpt_sseMessage;
         // 创建一个新的 EventSource 实例
-        this.chatgpt_eventSource = new EventSource('/api/chatgpt?query=' + keyword,{ withCredentials: true });
+        this.chatgpt_eventSource = new EventSource('/api/chatgpt?query=' + keyword);
         // 设置消息事件监听器
         this.chatgpt_eventSource.onmessage = (event) => {
           try {
@@ -457,7 +293,6 @@ export default {
 </script>
 
 <style scoped>
-
 .home {
   height: 100%;
   display: flex;
@@ -485,10 +320,9 @@ export default {
 
 .llm-chat-demo {
   width: 58%;
-  //margin: auto;
-  margin-left: 30px;
-  margin-top: 24px;
-  //font-family: "黑体", "SimHei", sans-serif;
+  margin: auto;
+//margin-left: 20px;
+//font-family: "黑体", "SimHei", sans-serif;
   font-family: Söhne, ui-sans-serif, system;
   font-variation-settings: normal;
   font-weight: 550;
@@ -526,7 +360,7 @@ export default {
   justify-content: center;
 }
 
-.message-role-name {
+.message-sender-name {
   margin-left: 10px;
 //font-family: "黑体", "SimHei", sans-serif;
   font-family: Söhne, ui-sans-serif, system;
@@ -584,6 +418,7 @@ export default {
   padding: 5px;
   margin-bottom: 5px;
   border-radius: 15px;
+
 }
 
 .friend-message {
@@ -591,7 +426,6 @@ export default {
   text-align: left;
   padding: 5px;
   margin-bottom: 5px;
-
 }
 
 .container {
@@ -623,7 +457,6 @@ export default {
   cursor: pointer;
   transition: background-color 0.3s ease;
   margin-right: 10px;
-  margin-top: 5px;
 }
 
 .logout-button:hover,
@@ -640,84 +473,6 @@ export default {
   right: 10px;
 }
 
-/* 侧边栏样式可根据需要自行调整 */
-.sidebar {
-  width: 250px;
-  background-color: #f0f0f0; /* 背景色调整为灰色 */
-  padding: 20px;
-  overflow-y: auto; /* 添加滚动条 */
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; /* 字体样式 */
-  color: #333; /* 文字颜色 */
-}
-
-.sidebar-header h2 {
-  margin: 0;
-  font-size: 20px;
-}
-
-.sidebar-header {
-  text-align: center;
-}
-
-.sidebar-header .el-button {
-  width: 105%; /* 让按钮宽度布满父容器 */
-  height: 40px;
-  margin-top: 10px; /* 可以根据需要调整按钮的上边距 */
-  font-size: 15px;
-  background-color: #ffffff !important;
-  border: 1px solid rgba(180, 180, 180, 0.3) !important;
-}
-
-.sidebar ul {
-  padding: 0;
-  list-style: none;
-}
-
-.sidebar ul li {
-  margin-bottom: 20px;
-}
-
-.sidebar ul li a {
-  text-decoration: none;
-  color: #333;
-  transition: background-color 0.3s ease;
-}
-
-.sidebar ul li:hover {
-  background-color: #ddd;
-  border-radius: 3px;
-  width: 100%;
-}
-
-.sidebar-list .el-button {
-  background-color: transparent !important; /* 使按钮背景透明 */
-  border: none !important; /* 可选，去除按钮边框 */
-  box-shadow: none !important; /* 可选，去除按钮阴影 */
-  color: inherit !important; /* 保持文本颜色与父元素一致 */
-  padding: 0 !important; /* 可选，去除按钮内边距 */
-}
-
-.theme-container {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  width: 100%;
-  height: 25px;
-}
-
-.selected-theme {
-  font-weight: bold; /* 添加选中主题的样式 */
-  background-color: #dddddd;
-  border-radius: 3px;
-  width: 100%;
-}
-
-.truncate-text {
-  display: block;
-  overflow: hidden;
-  white-space: nowrap;
-  text-overflow: ellipsis; /* 添加省略号 */
-}
 
 ::v-deep .friend-message pre .hljs {
   border-radius: 10px !important; /* 圆角 */
@@ -745,3 +500,4 @@ export default {
   background: #555; /* 设置鼠标悬停时滚动条滑块的背景色 */
 }
 </style>
+

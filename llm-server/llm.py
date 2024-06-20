@@ -9,15 +9,12 @@ import json
 from http import HTTPStatus
 from models import Conversations, db
 from datetime import datetime
-import sys
-import flask_sse as sse
-import copy
 
 llm_bp = Blueprint('llm', __name__)
 
+messages_chatgpt = []
 messages_tongyi = []
 messages_wenxin = []
-messages_chatgpt = []
 
 
 @llm_bp.route('/tongyi')
@@ -46,12 +43,10 @@ def stream_numbers():
                 whole_message += answer_part
                 json_data = json.dumps({"message": response.output.choices[0]['message']['content']})
                 yield f"data: {json_data}\n\n"  # 按照SSE格式发送数据
-                sys.stdout.flush()
 
         messages_tongyi.append({'role': 'assistant', 'content': whole_message})
         json_data = json.dumps({"message": 'done'})
         yield f"data: {json_data}\n\n"  # 按照SSE格式发送数据
-        sys.stdout.flush()
         print(json_data)
         print('通义千问结束')
 
@@ -72,28 +67,25 @@ def get_answer():
     query = request.args.get('query', default='default query')
     messages_chatgpt.append({'role': 'user', 'content': query})
 
-
     def chat():
         openai.api_base = "https://apikeyplus.com/v1"  # 换成代理，一定要加 v1
-        openai.api_key = "sk-EpjUlDRPazWZA88tEbFbBd5650E54e97A79743A018145b08"
+        openai.api_key = "sk-0oJ42VRZX4MU1GXQ8fB76c349aF649AbA0Fe017cE88b5dC5"
+
         response = ""
         for resp in openai.ChatCompletion.create(
-                model="gpt-4-turbo",
+                model="gpt-3.5-turbo",
                 messages=messages_chatgpt,
                 stream=True
         ):
             if 'content' in resp.choices[0].delta:
                 content = resp.choices[0].delta.content
                 response += content
-                print(content,end='')
                 json_data = json.dumps({"message": content})
                 yield f"data: {json_data}\n\n"  # 按照SSE格式发送数据
-                sys.stdout.flush()
 
-        messages_chatgpt.append({'role': 'assistant', 'content': response})
+        messages_chatgpt.append({'role': 'system', 'content': response})
         json_data = json.dumps({"message": 'done'})
         yield f"data: {json_data}\n\n"  # 按照SSE格式发送数据
-        sys.stdout.flush()
         print(json_data)
         print('ChatGPT结束')
 
@@ -139,14 +131,12 @@ def wenxin_get_answer():
                     if result:
                         json_data = json.dumps({"message": result})
                         yield f"data: {json_data}\n\n"  # 按照SSE格式发送数据
-                        sys.stdout.flush()
                 except json.JSONDecodeError:
                     print("无法解析为 JSON 格式:", line_decode)
                     continue
         messages_wenxin.append({'role': 'assistant', 'content': full_response})
         json_data = json.dumps({"message": 'done'})
         yield f"data: {json_data}\n\n"  # 按照SSE格式发送数据
-        sys.stdout.flush()
         print(json_data)
         print('文心一言结束')
 
@@ -179,7 +169,7 @@ def get_access_token():
 # 通过文心一言总结当前多轮对话的主题内容，不超过十个字
 def get_summary():
     global messages_wenxin
-    new_messages = copy.deepcopy(messages_wenxin) 
+    new_messages = messages_wenxin
     new_messages.append(
         {'role': 'user', 'content': '请你用不超过十个字来总结我们的对话内容，不要多余的对话内容，只要总结内容'})
 
@@ -212,10 +202,9 @@ def get_summary():
 
 # 用户创建新的聊天记录时应该保存旧的聊天记录
 @llm_bp.route('/conversations/new_conversation', methods=['POST'])
-@cross_origin(supports_credentials=True)
-@login_required
 def save_and_clear_conversation():
     global messages_chatgpt, messages_tongyi, messages_wenxin
+
     # 检查列表是否为空
     if not messages_chatgpt or not messages_tongyi or not messages_wenxin:
         # 列表为空，可以选择返回一个错误响应或者进行其他处理
@@ -251,49 +240,12 @@ def save_and_clear_conversation():
     return jsonify({'success': 'Conversation saved successfully.'}), 200
 
 
-@llm_bp.route('/conversations/update_conversation', methods=['PUT'])
-@cross_origin(supports_credentials=True)
-@login_required
-def update_conversation():
-    id=request.args.get('id')
-    global messages_chatgpt,messages_tongyi,messages_wenxin
-
-    # 检查列表是否为空
-    if not messages_chatgpt or not messages_tongyi or not messages_wenxin:
-        # 列表为空，可以选择返回一个错误响应或者进行其他处理
-        return jsonify({'error': 'Some of the message lists are empty.'}), 400
-
-    user_id = current_user.id  # 请替换成你实际的用户 ID
-    conversation = Conversations.query.filter_by(id=id, user_id=user_id)
-
-    if not conversation:
-        return jsonify({"error": "Conversation not found"}), 404
-    # 更新消息字段
-    Conversations.query.filter_by(id=id, user_id=user_id).update({
-        'chatgpt_messages': json.dumps(messages_chatgpt),
-        'wenxin_messages': json.dumps(messages_wenxin),
-        'tongyi_messages': json.dumps(messages_tongyi),
-        'timestamp': datetime.utcnow()
-    })
-    db.session.commit()
-
-    # 清空当前对话内容
-    messages_chatgpt = []
-    messages_tongyi = []
-    messages_wenxin = []
-
-
-    return jsonify({"message": "Conversation updated successfully"}), 200
-
-
 # 用户点击某个聊天记录的主题，获取此次聊天记录的所有内容，类似chatgpt页面的功能
 # 从页面返回：对话id
 # 返回：chatgpt_messages、chatgpt_messages、tongyi_messages
 @llm_bp.route('/conversations/get_conversation', methods=['GET'])
-@cross_origin(supports_credentials=True)
-@login_required
 def get_conversation_by_id():
-    global messages_chatgpt, messages_tongyi, messages_wenxin
+    # global messages_chatgpt,messages_tongyi,messages_wenxin
     conversation_id = request.args.get('id')
     user_id = current_user.id
 
@@ -308,24 +260,18 @@ def get_conversation_by_id():
     print("messages_chatgpt:", json.loads(conversation.chatgpt_messages))
     print("messages_tongyi:", json.loads(conversation.tongyi_messages))
     print("messages_wenxin:", json.loads(conversation.wenxin_messages))
-    messages_chatgpt=json.loads(conversation.chatgpt_messages)
-    messages_tongyi=json.loads(conversation.tongyi_messages)
-    messages_wenxin=json.loads(conversation.wenxin_messages)
 
     return jsonify({
-        'chatgpt_messages': json.loads(conversation.chatgpt_messages),
-        'wenxin_messages': json.loads(conversation.wenxin_messages),
-        'tongyi_messages': json.loads(conversation.tongyi_messages)
+        'chatgpt_messages': conversation.chatgpt_messages,
+        'wenxin_messages': conversation.wenxin_messages,
+        'tongyi_messages': conversation.tongyi_messages
     }), 200
 
 
 # 获取当前用户的所有聊天记录的主题
 # input：当前用户id 【不需要从页面获取，后端有记录】
 # output： conversation.id, conversation.summary
-
 @llm_bp.route('/conversations/get_conversation_summary', methods=['GET'])
-@cross_origin(supports_credentials=True)
-@login_required
 def get_user_conversations():
     user_id = current_user.id
     if not user_id:
@@ -341,7 +287,7 @@ def get_user_conversations():
         {'id': conversation.id, 'summary': conversation.summary}
         for conversation in conversations
     ]
-   # print(result)
+    print(result)
     return jsonify(result), 200
 
 
@@ -359,28 +305,17 @@ def view_conversations():
             'summary': conversation.summary,
             'timestamp': conversation.timestamp
         })
-
-        print('id:', conversation.id,
-            'user_id:', conversation.user_id,
-            'chatgpt_messages:', conversation.chatgpt_messages,
-            'wenxin_messages:', conversation.wenxin_messages,
-            'tongyi_messages:', conversation.tongyi_messages,
-            'summary:', conversation.summary,
-            'timestamp:', conversation.timestamp)
-
     return {'conversations': result}
 
 
-@llm_bp.route('/conversations/delete_conversation', methods=['DELETE'])
-@cross_origin(supports_credentials=True)
-@login_required
-def delete_conversation():
-    id =request.args.get('id')
-    user_id=current_user.id
-    conversation = Conversations.query.filter_by(id=id, user_id=user_id).first()
-    if conversation:
-        db.session.delete(conversation)
-        db.session.commit()
-        return jsonify({'message': 'Conversation deleted successfully'}), 200
-    else:
-        return jsonify({'message': 'Conversation not found'}), 404
+# @llm_bp.route('/messages/all', methods=['GET'])
+# def get_all_messages():
+#     global messages_chatgpt, messages_tongyi, messages_wenxin
+#     print("messages_chatgpt:", messages_chatgpt)
+#     print("messages_tongyi:", messages_tongyi)
+#     print("messages_wenxin:", messages_wenxin)
+#     return jsonify({
+#         'chatgpt': messages_chatgpt,
+#         'tongyi': messages_tongyi,
+#         'wenxin': messages_wenxin
+#     }), 200

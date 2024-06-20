@@ -11,13 +11,6 @@ class User(db.Model, UserMixin):
     username = db.Column(db.String(150), unique=True, nullable=False)
     password_hash = db.Column(db.String(150), nullable=False)
     is_admin = db.Column(db.Boolean, default=False)
-    # tln新增
-    created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
-    # xqq新增 4个字段
-    conversation_current_id = db.Column(db.Integer, default=0)
-    current_chatgpt_messages = db.Column(db.JSON, default='[]')
-    current_wenxin_messages = db.Column(db.JSON, default='[]')
-    current_tongyi_messages = db.Column(db.JSON, default='[]')
 
     @property
     def password(self):
@@ -37,8 +30,6 @@ class Feedback(db.Model):
     message = db.Column(db.Text, nullable=False)
     timestamp = db.Column(db.DateTime, default=datetime.utcnow)
     user = db.relationship('User', backref=db.backref('feedback', lazy=True))
-    # 新增 为了显示未读反馈信息
-    is_read = db.Column(db.Boolean, default=False, nullable=False)
 
 
 class Conversations(db.Model):
@@ -47,5 +38,5 @@ class Conversations(db.Model):
     chatgpt_messages = db.Column(db.JSON)  # 改为 JSON 类型
     wenxin_messages = db.Column(db.JSON)   # 改为 JSON 类型
     tongyi_messages = db.Column(db.JSON)   # 改为 JSON 类型
-    summary = db.Column(db.String(15))       # 来自文心一言的总结
+    summary=db.Column(db.String(15))       # 来自文心一言的总结
     timestamp = db.Column(db.TIMESTAMP, default=datetime.utcnow)
