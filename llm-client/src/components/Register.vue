@@ -19,6 +19,19 @@
             <label for="password">密码：</label>
             <input type="password" v-model="password" class="input-field" required>
           </div>
+          <div class="form-group">
+            <label for="email">邮箱：</label>
+            <div class="input-with-button">
+              <input type="email" v-model="email" class="input-field" required>
+              <button type="button" :disabled="isSendingCode" @click="sendAuthCode" class="auth-code-button">
+                {{ sendButtonText }}
+              </button>
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="authcode">验证码：</label>
+            <input type="text" v-model="authcode" class="input-field" required>
+          </div>
           <button type="submit" class="register-button">注册</button>
         </form>
         <p class="register-message">{{ message }}</p>
@@ -37,15 +50,54 @@ export default {
     return {
       username: '',
       password: '',
-      message: ''
+      email: '',
+      authcode: '',
+      message: '',
+      isSendingCode: false,
+      countdown: 60,
+      timer: null
     };
   },
+  computed: {
+    sendButtonText() {
+      return this.isSendingCode ? `重新发送(${this.countdown}s)` : '发送验证码';
+    }
+  },
   methods: {
+    async sendAuthCode() {
+      try {
+        this.isSendingCode = true;
+        this.countdown = 60;
+        this.startCountdown();
+
+        const response = await axios.post('/api/authenticate', {
+          username: this.username,
+          email: this.email
+        });
+        this.message = response.data.message;
+      } catch (error) {
+        this.message = error.response && error.response.data ? error.response.data.message : '验证码发送失败，请稍后重试。';
+        this.isSendingCode = false;
+        clearInterval(this.timer);
+      }
+    },
+    startCountdown() {
+      this.timer = setInterval(() => {
+        if (this.countdown > 0) {
+          this.countdown--;
+        } else {
+          this.isSendingCode = false;
+          clearInterval(this.timer);
+        }
+      }, 1000);
+    },
     async register() {
       try {
         const response = await axios.post('/api/register', {
           username: this.username,
-          password: this.password
+          password: this.password,
+          email: this.email,
+          authcode: this.authcode
         });
         this.message = response.data.message;
         if (response.status === 201) {
@@ -134,7 +186,7 @@ export default {
 }
 
 .input-field {
-  width: 250px;
+  flex: 0.93;
   padding: 10px;
   border: 1px solid #ccc;
   border-radius: 5px;
@@ -142,9 +194,35 @@ export default {
   transition: box-shadow 0.3s ease;
 }
 
+.input-with-button {
+  display: flex;
+  align-items: center;
+}
+
 .input-field:focus {
   outline: none;
   box-shadow: 0 0 5px rgba(0, 0, 0, 0.3);
+}
+
+.auth-code-button {
+  margin-left: 10px;
+  background-color: #007bff;
+  color: #fff;
+  width: 105px;
+  padding: 10px 10px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  white-space: nowrap;  /* 防止按钮文字换行 */
+}
+
+.auth-code-button:disabled {
+  background-color: #6c757d;
+  cursor: not-allowed;
+}
+
+.auth-code-button:hover:enabled {
+  background-color: #0056b3;
 }
 
 .register-button {

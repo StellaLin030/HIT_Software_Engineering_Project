@@ -1,9 +1,14 @@
+import redis
+import config
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import UserMixin
+from flask_mail import Mail
 from werkzeug.security import generate_password_hash, check_password_hash
 from datetime import datetime
 
 db = SQLAlchemy()
+mail = Mail()
+redis_conn = redis.StrictRedis(host=config.REDIS_HOST, port=config.REDIS_PORT)
 
 
 class User(db.Model, UserMixin):
@@ -11,6 +16,8 @@ class User(db.Model, UserMixin):
     username = db.Column(db.String(150), unique=True, nullable=False)
     password_hash = db.Column(db.String(150), nullable=False)
     is_admin = db.Column(db.Boolean, default=False)
+    # lzy新增 用户注册邮箱
+    email = db.Column(db.String(150), unique=True, nullable=False)
     # tln新增
     created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
     # xqq新增 4个字段

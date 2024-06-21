@@ -10,7 +10,6 @@ from http import HTTPStatus
 from models import Conversations, db
 from datetime import datetime
 import sys
-import flask_sse as sse
 import copy
 
 llm_bp = Blueprint('llm', __name__)
@@ -375,7 +374,7 @@ def view_conversations():
 @cross_origin(supports_credentials=True)
 @login_required
 def delete_conversation():
-    id =request.args.get('id')
+    id = request.args.get('id')
     user_id=current_user.id
     conversation = Conversations.query.filter_by(id=id, user_id=user_id).first()
     if conversation:

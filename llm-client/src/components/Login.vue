@@ -12,7 +12,7 @@
         <h2 class="login-title">欢迎回来！</h2>
         <form @submit.prevent="login" class="login-form">
           <div class="form-group">
-            <label for="username">用户名：</label>
+            <label for="username">用户名/邮箱：</label>
             <input type="text" v-model="username" class="input-field" required>
           </div>
           <div class="form-group">
@@ -131,12 +131,13 @@ export default {
 }
 
 .form-group label {
-  width: 80px;
+  width: 110px;
 }
 
 .input-field {
   width: 250px;
   padding: 10px;
+  //margin-left: 30px;
   border: 1px solid #ccc;
   border-radius: 5px;
   box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
