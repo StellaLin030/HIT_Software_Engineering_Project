@@ -3,8 +3,10 @@ SQLALCHEMY_DATABASE_URI = 'sqlite:///site.db'
 SQLALCHEMY_TRACK_MODIFICATIONS = False
 # 添加邮箱配置
 MAIL_SERVER = 'smtp.163.com'
-MAIL_PORT = '25'
-MAIL_USE_TLS = True
+# MAIL_PORT = '25'
+MAIL_PORT = 465
+# MAIL_USE_TLS = True
+MAIL_USE_SSL = True
 MAIL_USERNAME = 'hitchatwithaisteam@163.com'
 MAIL_PASSWORD = 'PYBYOUUZHDICZMRN'
 MAIL_DEFAULT_SENDER = 'hitchatwithaisteam@163.com'
