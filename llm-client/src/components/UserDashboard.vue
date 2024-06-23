@@ -26,7 +26,7 @@
 
       <div class="right-version">
         <div class="llm-chat-demo">
-          <span class="chat-demo">ChatWithAIs</span><span class="version"> V1</span>
+          <span class="chat-demo">ChatWithAIs</span><span class="version"> V2</span>
         </div>
 
         <!-- 添加登出和反馈按钮 -->
