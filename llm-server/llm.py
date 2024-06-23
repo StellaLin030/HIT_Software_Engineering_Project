@@ -1,4 +1,4 @@
-from flask import Blueprint, Response, json, request, jsonify
+from flask import after_this_request,Blueprint, Response, json, request, jsonify
 from flask_login import login_required, current_user
 from flask_cors import cross_origin
 import openai
@@ -11,31 +11,30 @@ from models import Conversations, db
 from datetime import datetime
 import sys
 import copy
+import _thread
 
 llm_bp = Blueprint('llm', __name__)
-
-messages_tongyi = []
-messages_wenxin = []
-messages_chatgpt = []
 
 
 @llm_bp.route('/tongyi')
 @cross_origin(supports_credentials=True)
 @login_required
-def stream_numbers():
-    global messages_tongyi
+def getTongyiAnswer():
+    messages_tongyi = current_user.get_current_tongyi_messages()
     query = request.args.get('query', default='default query')
     messages_tongyi.append({'role': 'user', 'content': query})
+    
+    # 使用列表来收集生成器的输出
+    chat_responses = []
 
-    def chat():
-        print(query)
+    def chat_generator():
         dashscope.api_key = "sk-96f5960806d24c9cbb8b01de99e9c224"
         responses = Generation.call(
             model="qwen-turbo",
             messages=messages_tongyi,
-            result_format='message',  # 设置输出为'message'格式
-            stream=True,  # 设置输出方式为流式输出
-            incremental_output=True  # 增量式流式输出
+            result_format='message',
+            stream=True,
+            incremental_output=True
         )
 
         whole_message = ""
@@ -43,58 +42,82 @@ def stream_numbers():
             if response.status_code == HTTPStatus.OK:
                 answer_part = response.output.choices[0]['message']['content']
                 whole_message += answer_part
-                json_data = json.dumps({"message": response.output.choices[0]['message']['content']})
-                yield f"data: {json_data}\n\n"  # 按照SSE格式发送数据
+                json_data = json.dumps({"message": answer_part})
+                yield f"data: {json_data}\n\n"
                 sys.stdout.flush()
 
         messages_tongyi.append({'role': 'assistant', 'content': whole_message})
         json_data = json.dumps({"message": 'done'})
-        yield f"data: {json_data}\n\n"  # 按照SSE格式发送数据
+        yield f"data: {json_data}\n\n"
         sys.stdout.flush()
-        print(json_data)
         print('通义千问结束')
+    
+    # 执行生成器并收集响应
+    for item in chat_generator():
+        chat_responses.append(item)
 
+    # 在生成器执行完毕后设置当前用户的消息
+    current_user.set_current_tongyi_messages(messages_tongyi)
+    db.session.commit()  # 提交数据库事务
+    print('tesy'+json.dumps(messages_tongyi))
+
+    # 返回响应
     headers = {
         'Content-Type': 'text/event-stream',
         'Cache-Control': 'no-cache',
         'X-Accel-Buffering': 'no',
     }
+    return Response(chat_responses, content_type='text/event-stream', headers=headers)
 
-    return Response(chat(), content_type='text/event-stream', headers=headers)
+
 
 
 @llm_bp.route('/chatgpt')
 @cross_origin(supports_credentials=True)
 @login_required
 def get_answer():
-    global messages_chatgpt
+    messages_chatgpt=current_user.get_current_chatgpt_messages()
     query = request.args.get('query', default='default query')
     messages_chatgpt.append({'role': 'user', 'content': query})
+    # 使用列表来收集生成器的输出
+    chat_responses = []
 
+    def chat_generator():
+        url = "https://apikeyplus.com/v1/chat/completions"
+        headers = {
+        'Content-Type': 'application/json',
+        # 填写 OpenKEY 生成的令牌/KEY，注意前面的 Bearer 要保留，并且和 KEY 中间有一个空格。
+        'Authorization': 'sk-EpjUlDRPazWZA88tEbFbBd5650E54e97A79743A018145b08'
+        }
+        data = {
+        "model": "gpt-3.5-turbo",
+        "messages": messages_chatgpt
+        }
+        response = requests.post(url, headers=headers, json=data)
+        if response.status_code == 200:
+            # 处理响应数据
+            json_response = response.json()  # 将 JSON 响应解析为 Python 字典或列表
+            content = json_response['choices'][0]['message']['content']  # 获取 content 内容
+            messages_chatgpt.append({'role': 'assistant', 'content': content})
+            print(content)
+            json_data = json.dumps({"message": content})
+            yield f"data: {json_data}\n\n"
+            sys.stdout.flush()
 
-    def chat():
-        openai.api_base = "https://apikeyplus.com/v1"  # 换成代理，一定要加 v1
-        openai.api_key = "sk-EpjUlDRPazWZA88tEbFbBd5650E54e97A79743A018145b08"
-        response = ""
-        for resp in openai.ChatCompletion.create(
-                model="gpt-4-turbo",
-                messages=messages_chatgpt,
-                stream=True
-        ):
-            if 'content' in resp.choices[0].delta:
-                content = resp.choices[0].delta.content
-                response += content
-                print(content,end='')
-                json_data = json.dumps({"message": content})
-                yield f"data: {json_data}\n\n"  # 按照SSE格式发送数据
-                sys.stdout.flush()
+        else:
+            print(f"Request failed with status code: {response.status_code}")
 
-        messages_chatgpt.append({'role': 'assistant', 'content': response})
         json_data = json.dumps({"message": 'done'})
         yield f"data: {json_data}\n\n"  # 按照SSE格式发送数据
         sys.stdout.flush()
         print(json_data)
         print('ChatGPT结束')
+
+   # 执行生成器并收集响应
+    for item in chat_generator():
+        chat_responses.append(item)
+    current_user.set_current_chatgpt_messages(messages_chatgpt)
+    db.session.commit()  # 提交数据库事务
 
     headers = {
         'Content-Type': 'text/event-stream',
@@ -102,18 +125,21 @@ def get_answer():
         'X-Accel-Buffering': 'no',
     }
 
-    return Response(chat(), content_type='text/event-stream', headers=headers)
+    return Response(chat_responses, content_type='text/event-stream', headers=headers)
 
 
 @llm_bp.route('/wenxin')
 @cross_origin(supports_credentials=True)
 @login_required
 def wenxin_get_answer():
-    global messages_wenxin
+
+    messages_wenxin=current_user.get_current_wenxin_messages()
     query = request.args.get('query', default='default query')
     messages_wenxin.append({'role': 'user', 'content': query})
+    # 使用列表来收集生成器的输出
+    chat_responses = []
 
-    def chat():
+    def chat_generator():
         url = "https://aip.baidubce.com/rpc/2.0/ai_custom/v1/wenxinworkshop/chat/ernie-speed-128k?access_token=" + get_access_token()
 
         payload = json.dumps({
@@ -148,14 +174,18 @@ def wenxin_get_answer():
         sys.stdout.flush()
         print(json_data)
         print('文心一言结束')
-
+   # 执行生成器并收集响应
+    for item in chat_generator():
+        chat_responses.append(item)
+    current_user.set_current_wenxin_messages(messages_wenxin)
+    db.session.commit()  # 提交数据库事务
     headers = {
         'Content-Type': 'text/event-stream',
         'Cache-Control': 'no-cache',
         'X-Accel-Buffering': 'no',
     }
 
-    return Response(chat(), content_type='text/event-stream', headers=headers)
+    return Response(chat_responses, content_type='text/event-stream', headers=headers)
 
 
 def get_access_token():
@@ -177,7 +207,8 @@ def get_access_token():
 
 # 通过文心一言总结当前多轮对话的主题内容，不超过十个字
 def get_summary():
-    global messages_wenxin
+    messages_wenxin=current_user.get_current_wenxin_messages()
+
     new_messages = copy.deepcopy(messages_wenxin) 
     new_messages.append(
         {'role': 'user', 'content': '请你用不超过十个字来总结我们的对话内容，不要多余的对话内容，只要总结内容'})
@@ -214,7 +245,7 @@ def get_summary():
 @cross_origin(supports_credentials=True)
 @login_required
 def save_and_clear_conversation():
-    global messages_chatgpt, messages_tongyi, messages_wenxin
+    messages_tongyi, messages_wenxin,messages_chatgpt=current_user.getAllMessages()
     # 检查列表是否为空
     if not messages_chatgpt or not messages_tongyi or not messages_wenxin:
         # 列表为空，可以选择返回一个错误响应或者进行其他处理
@@ -245,7 +276,8 @@ def save_and_clear_conversation():
     messages_chatgpt = []
     messages_tongyi = []
     messages_wenxin = []
-
+    current_user.setAllMessages(messages_chatgpt,messages_wenxin,messages_tongyi)
+    db.session.commit()  # 提交数据库事务  
     # 返回成功响应或其他适当的响应
     return jsonify({'success': 'Conversation saved successfully.'}), 200
 
@@ -255,7 +287,8 @@ def save_and_clear_conversation():
 @login_required
 def update_conversation():
     id=request.args.get('id')
-    global messages_chatgpt,messages_tongyi,messages_wenxin
+    messages_tongyi, messages_wenxin,messages_chatgpt=current_user.getAllMessages()
+
 
     # 检查列表是否为空
     if not messages_chatgpt or not messages_tongyi or not messages_wenxin:
@@ -264,6 +297,7 @@ def update_conversation():
 
     user_id = current_user.id  # 请替换成你实际的用户 ID
     conversation = Conversations.query.filter_by(id=id, user_id=user_id)
+    current_summary = get_summary()  # 由文心一言总结对话内容 
 
     if not conversation:
         return jsonify({"error": "Conversation not found"}), 404
@@ -272,7 +306,8 @@ def update_conversation():
         'chatgpt_messages': json.dumps(messages_chatgpt),
         'wenxin_messages': json.dumps(messages_wenxin),
         'tongyi_messages': json.dumps(messages_tongyi),
-        'timestamp': datetime.utcnow()
+        'timestamp': datetime.utcnow(),
+        'summary':current_summary
     })
     db.session.commit()
 
@@ -280,8 +315,8 @@ def update_conversation():
     messages_chatgpt = []
     messages_tongyi = []
     messages_wenxin = []
-
-
+    current_user.setAllMessages(messages_chatgpt,messages_wenxin,messages_tongyi)
+    db.session.commit()  # 提交数据库事务
     return jsonify({"message": "Conversation updated successfully"}), 200
 
 
@@ -292,7 +327,6 @@ def update_conversation():
 @cross_origin(supports_credentials=True)
 @login_required
 def get_conversation_by_id():
-    global messages_chatgpt, messages_tongyi, messages_wenxin
     conversation_id = request.args.get('id')
     user_id = current_user.id
 
@@ -310,6 +344,8 @@ def get_conversation_by_id():
     messages_chatgpt=json.loads(conversation.chatgpt_messages)
     messages_tongyi=json.loads(conversation.tongyi_messages)
     messages_wenxin=json.loads(conversation.wenxin_messages)
+    current_user.setAllMessages(messages_chatgpt,messages_wenxin,messages_tongyi)
+    db.session.commit()  # 提交数据库事务
 
     return jsonify({
         'chatgpt_messages': json.loads(conversation.chatgpt_messages),

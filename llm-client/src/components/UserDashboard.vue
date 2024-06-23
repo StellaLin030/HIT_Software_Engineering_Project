@@ -334,6 +334,7 @@ export default {
         });
 
         let wenxin_friendMessage = wenxin_sseMessage;
+        this.wenxin_messages.push(wenxin_sseMessage);
         // 创建一个新的 EventSource 实例
         this.wenxin_eventSource = new EventSource('/api/wenxin?query=' + keyword,{ withCredentials: true });
         // 设置消息事件监听器
@@ -351,19 +352,21 @@ export default {
               wenxin_friendMessage.orgcontent = wenxin_friendMessage.orgcontent.replace(/\*\*\s*([^*]*?)\s*(:\s*)?\*\*/g, '**$1$2**');
               // 更新 friendMessage.content，这里假设 md.render 可以处理累加的字符串
               wenxin_friendMessage.content = this.md.render(wenxin_friendMessage.orgcontent);
+              this.scrollToBottom();
             }
-            this.scrollToBottom();
+            //this.scrollToBottom();
           } catch (e) {
             console.error('Error parsing JSON:', e);
           }
         };
-        this.wenxin_messages.push(wenxin_sseMessage);
+        
         this.queryKeyword = ''; // 清空输入框
         this.wenxin_eventSource.onerror = error => {
           console.error('EventSource failed:', error);
           this.wenxin_eventSource.close();
         };
         let tongyi_friendMessage = tongyi_sseMessage;
+        this.tongyi_messages.push(tongyi_sseMessage);
         // 创建一个新的 EventSource 实例
         this.tongyi_eventSource = new EventSource('/api/tongyi?query=' + keyword,{ withCredentials: true });
         // 设置消息事件监听器
@@ -381,19 +384,20 @@ export default {
               tongyi_friendMessage.orgcontent = tongyi_friendMessage.orgcontent.replace(/\*\*\s*([^*]*?)\s*(:\s*)?\*\*/g, '**$1$2**');
               // 更新 friendMessage.content，这里假设 md.render 可以处理累加的字符串
               tongyi_friendMessage.content = this.md.render(tongyi_friendMessage.orgcontent);
+              this.scrollToBottom();
             }
-            this.scrollToBottom();
+            //this.scrollToBottom();
           } catch (e) {
             console.error('Error parsing JSON:', e);
           }
         };
-        this.tongyi_messages.push(tongyi_sseMessage);
         this.queryKeyword = ''; // 清空输入框
         this.tongyi_eventSource.onerror = error => {
           console.error('EventSource failed:', error);
           this.tongyi_eventSource.close();
         };
         let chatgpt_friendMessage = chatgpt_sseMessage;
+        this.chatgpt_messages.push(chatgpt_sseMessage);
         // 创建一个新的 EventSource 实例
         this.chatgpt_eventSource = new EventSource('/api/chatgpt?query=' + keyword,{ withCredentials: true });
         // 设置消息事件监听器
@@ -411,13 +415,14 @@ export default {
               chatgpt_friendMessage.orgcontent = chatgpt_friendMessage.orgcontent.replace(/\*\*\s*([^*]*?)\s*(:\s*)?\*\*/g, '**$1$2**');
               // 更新 friendMessage.content，这里假设 md.render 可以处理累加的字符串
               chatgpt_friendMessage.content = this.md.render(chatgpt_friendMessage.orgcontent);
+              this.scrollToBottom();
             }
-            this.scrollToBottom();
+            
           } catch (e) {
             console.error('Error parsing JSON:', e);
           }
         };
-        this.chatgpt_messages.push(chatgpt_sseMessage);
+        
         this.queryKeyword = ''; // 清空输入框
         this.chatgpt_eventSource.onerror = error => {
           console.error('EventSource failed:', error);
@@ -593,23 +598,17 @@ export default {
   margin-bottom: 5px;
 
 }
-
 .container {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  display: flex;
+  justify-content: space-between; /* 将三栏平分父容器的宽度 */
 }
 
-.left {
-  grid-column: 1 / 2;
+.left, .mid, .right {
+  flex: 6; /* 平分父容器的宽度 */
+  margin-right: 1px; /* 可以根据需要调整间距 */
 }
 
-.mid {
-  grid-column: 2 / 3;
-}
 
-.right {
-  grid-column: 3 / 4;
-}
 
 .logout-button,
 .feedback-button {
@@ -711,6 +710,8 @@ export default {
   border-radius: 3px;
   width: 100%;
 }
+
+
 
 .truncate-text {
   display: block;

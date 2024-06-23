@@ -5,7 +5,7 @@ from flask_login import UserMixin
 from flask_mail import Mail
 from werkzeug.security import generate_password_hash, check_password_hash
 from datetime import datetime
-
+import json
 db = SQLAlchemy()
 mail = Mail()
 redis_conn = redis.StrictRedis(host=config.REDIS_HOST, port=config.REDIS_PORT)
@@ -22,9 +22,9 @@ class User(db.Model, UserMixin):
     created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
     # xqq新增 4个字段
     conversation_current_id = db.Column(db.Integer, default=0)
-    current_chatgpt_messages = db.Column(db.JSON, default='[]')
-    current_wenxin_messages = db.Column(db.JSON, default='[]')
-    current_tongyi_messages = db.Column(db.JSON, default='[]')
+    current_chatgpt_messages = db.Column(db.JSON,default='[]')
+    current_wenxin_messages = db.Column(db.JSON,default='[]')
+    current_tongyi_messages = db.Column(db.JSON,default='[]')
 
     @property
     def password(self):
@@ -36,6 +36,36 @@ class User(db.Model, UserMixin):
 
     def verify_password(self, password):
         return check_password_hash(self.password_hash, password)
+    
+    def set_current_chatgpt_messages(self,messages_chatgpt):
+        self.current_chatgpt_messages=json.dumps(messages_chatgpt)
+
+    def set_current_wenxin_messages(self,messages_wenxin):
+        self.current_wenxin_messages=json.dumps(messages_wenxin)
+
+    def set_current_tongyi_messages(self,messages_tongyi):
+        self.current_tongyi_messages=json.dumps(messages_tongyi)
+
+    def get_current_chatgpt_messages(self):
+        return json.loads(self.current_chatgpt_messages)
+    
+    def get_current_wenxin_messages(self):
+        return json.loads(self.current_wenxin_messages)
+    
+    def get_current_tongyi_messages(self):
+        return json.loads(self.current_tongyi_messages)
+    
+    def getAllMessages(self):
+        return json.loads(self.current_tongyi_messages),json.loads(self.current_wenxin_messages),json.loads(self.current_chatgpt_messages)
+    
+    def setAllMessages(self,messages_chatgpt,messages_tongyi,messages_wenxin):
+        self.current_chatgpt_messages=json.dumps(messages_chatgpt)
+        self.current_wenxin_messages=json.dumps(messages_wenxin)
+        self.current_tongyi_messages=json.dumps(messages_tongyi)
+
+
+
+
 
 
 class Feedback(db.Model):
