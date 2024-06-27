@@ -528,7 +528,7 @@ export default {
 
 .main-message {
   margin: auto;
-  width: 58%;
+  width: 90%;
   justify-content: center;
 }
 
@@ -600,15 +600,33 @@ export default {
 
 }
 .container {
-  display: flex;
-  justify-content: space-between; /* 将三栏平分父容器的宽度 */
-}
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr; /* 三列等宽 */
+      gap: 10px; /* 列间距 */
+      height: 100vh; /* 设定高度以便示范 */
+  }
 
-.left, .mid, .right {
-  flex: 6; /* 平分父容器的宽度 */
-  margin-right: 1px; /* 可以根据需要调整间距 */
-}
+  .left, .mid, .right {
+    border: 1px solid #ccc; /* 边框以便示范 */
+    padding: 10px;
+    overflow: auto; /* 内容溢出时显示滚动条 */
+    box-sizing: border-box; /* 包括padding和border在内的宽度计算 */
+  }
 
+  .left {
+    grid-column: 1 / 2;
+    min-width: 200px; /* 最小宽度 */
+  }
+
+  .mid {
+    grid-column: 2 / 3;
+    min-width: 200px; /* 最小宽度 */
+  }
+
+  .right {
+    grid-column: 3 / 4;
+    min-width: 200px; /* 最小宽度 */
+  }
 
 
 .logout-button,
