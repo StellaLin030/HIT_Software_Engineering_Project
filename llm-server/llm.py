@@ -329,7 +329,15 @@ def update_conversation():
 def get_conversation_by_id():
     conversation_id = request.args.get('id')
     user_id = current_user.id
-
+    
+    if user_id==-1:
+        messages_tongyi, messages_wenxin,messages_chatgpt=current_user.getAllMessages()
+        return jsonify({
+            'chatgpt_messages': json.loads(conversation.chatgpt_messages),
+            'wenxin_messages': json.loads(conversation.wenxin_messages),
+            'tongyi_messages': json.loads(conversation.tongyi_messages)
+        }), 200
+        
     if not conversation_id or not user_id:
         return jsonify({'error': 'Missing id or user_id'}), 400
 
