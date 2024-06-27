@@ -356,7 +356,7 @@ export default {
 
 .main-message {
   margin: auto;
-  width: 58%;
+  width: 90%;
   justify-content: center;
 }
 
@@ -429,22 +429,33 @@ export default {
 }
 
 .container {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr; /* 三列等宽 */
+    gap: 10px; /* 列间距 */
+    height: 100vh; /* 设定高度以便示范 */
+}
+
+.left, .mid, .right {
+  border: 1px solid #ccc; /* 边框以便示范 */
+  padding: 10px;
+  overflow: auto; /* 内容溢出时显示滚动条 */
+  box-sizing: border-box; /* 包括padding和border在内的宽度计算 */
 }
 
 .left {
   grid-column: 1 / 2;
+  min-width: 200px; /* 最小宽度 */
 }
 
 .mid {
   grid-column: 2 / 3;
+  min-width: 200px; /* 最小宽度 */
 }
 
 .right {
   grid-column: 3 / 4;
+  min-width: 200px; /* 最小宽度 */
 }
-
 .logout-button,
 .feedback-button {
   background-color: #1296db;
