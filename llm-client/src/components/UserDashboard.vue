@@ -149,6 +149,7 @@ export default {
   created() {
     // 在组件实例化后立即运行一次 fetchThemes()
     this.fetchThemes();
+    this.get_conversation(-1);
   },
   methods: {
    
