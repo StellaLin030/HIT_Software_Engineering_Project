@@ -36,9 +36,10 @@
         </div>
       </div>
 
-      <div class="right-body" :class="wenxin_messages.length === 0 ? 'nodata' : ''" ref="messageContainer">
+<!--      <div class="right-body" :class="wenxin_messages.length === 0 ? 'nodata' : ''" ref="messageContainer">-->
+      <div class="right-body" :class="wenxin_messages.length === 0 ? 'nodata' : ''">
         <div class="container">
-          <div class="left">
+          <div class="left" ref="messageContainer0">
             <div v-for="(message, index) in wenxin_messages" class="main-message" :key="index"
                  :class="{'user-message': message.role === 'user', 'friend-message': message.role === 'assistant'}">
               <!-- 显示用户标识和图片 -->
@@ -53,7 +54,7 @@
               <div v-else class="friend-message" v-html="renderMessage(message.content)"></div>
             </div>
           </div>
-          <div class="mid">
+          <div class="mid" ref="messageContainer1">
             <div v-for="(message, index) in tongyi_messages" class="main-message" :key="index"
                  :class="{'user-message': message.role === 'user', 'friend-message': message.role === 'assistant'}">
               <!-- 显示用户标识和图片 -->
@@ -68,7 +69,7 @@
               <div v-else class="friend-message" v-html="renderMessage(message.content)"></div>
             </div>
           </div>
-          <div class="right">
+          <div class="right" ref="messageContainer2">
             <div v-for="(message, index) in chatgpt_messages" class="main-message" :key="index"
                  :class="{'user-message': message.role === 'user', 'friend-message': message.role === 'assistant'}">
               <!-- 显示用户标识和图片 -->
@@ -149,7 +150,7 @@ export default {
   created() {
     // 在组件实例化后立即运行一次 fetchThemes()
     this.fetchThemes();
-    this.get_conversation(-1);
+    //this.get_conversation(-1);
   },
   methods: {
    
@@ -169,13 +170,9 @@ export default {
       })
       .then(data => {
         // 在这里处理从后端获取的对话记录数据
-
         this.chatgpt_messages=data.chatgpt_messages;
-
         this.tongyi_messages=data.tongyi_messages;
-
         this.wenxin_messages=data.wenxin_messages;
-
       })
       .catch(error => {
         // 处理错误情况
@@ -442,9 +439,13 @@ export default {
       }
     },
     scrollToBottom() {
-      const messageContainer = this.$refs.messageContainer;
-      if (messageContainer) {
-        messageContainer.scrollTop = messageContainer.scrollHeight;
+      const messageContainer0 = this.$refs.messageContainer0;
+      const messageContainer1 = this.$refs.messageContainer1;
+      const messageContainer2 = this.$refs.messageContainer2;
+      if (messageContainer0 && messageContainer1 && messageContainer2) {
+        messageContainer0.scrollTop = messageContainer0.scrollHeight;
+        messageContainer1.scrollTop = messageContainer1.scrollHeight;
+        messageContainer2.scrollTop = messageContainer2.scrollHeight;
       }
     },
     beforeDestroy() {
@@ -599,34 +600,36 @@ export default {
   margin-bottom: 5px;
 
 }
+
 .container {
-      display: grid;
-      grid-template-columns: 1fr 1fr 1fr; /* 三列等宽 */
-      gap: 10px; /* 列间距 */
-      height: 100vh; /* 设定高度以便示范 */
-  }
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr; /* 三列等宽 */
+  gap: 10px; /* 列间距 */
+  height: 85vh; /* 设定高度以便示范 */
+}
 
-  .left, .mid, .right {
-    border: 1px solid #ccc; /* 边框以便示范 */
-    padding: 10px;
-    overflow: auto; /* 内容溢出时显示滚动条 */
-    box-sizing: border-box; /* 包括padding和border在内的宽度计算 */
-  }
+.left, .mid, .right {
+  //border: 1px solid #ccc; /* 边框以便示范 */
+  border: transparent;
+  padding: 10px;
+  overflow: auto; /* 内容溢出时显示滚动条 */
+  box-sizing: border-box; /* 包括padding和border在内的宽度计算 */
+}
 
-  .left {
-    grid-column: 1 / 2;
-    min-width: 200px; /* 最小宽度 */
-  }
+.left {
+  grid-column: 1 / 2;
+  min-width: 200px; /* 最小宽度 */
+}
 
-  .mid {
-    grid-column: 2 / 3;
-    min-width: 200px; /* 最小宽度 */
-  }
+.mid {
+  grid-column: 2 / 3;
+  min-width: 200px; /* 最小宽度 */
+}
 
-  .right {
-    grid-column: 3 / 4;
-    min-width: 200px; /* 最小宽度 */
-  }
+.right {
+  grid-column: 3 / 4;
+  min-width: 200px; /* 最小宽度 */
+}
 
 
 .logout-button,
@@ -729,8 +732,6 @@ export default {
   border-radius: 3px;
   width: 100%;
 }
-
-
 
 .truncate-text {
   display: block;

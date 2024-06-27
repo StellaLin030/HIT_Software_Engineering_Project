@@ -2,7 +2,7 @@ import re
 import random
 from flask import Blueprint, request, jsonify
 from flask_cors import cross_origin
-from flask_login import login_user, logout_user, login_required
+from flask_login import login_user, logout_user, login_required, current_user
 from models import User, db, redis_conn
 from sendEmail import send_mail
 
@@ -131,12 +131,15 @@ def login():
     username = data.get('username')
     password = data.get('password')
     user = User.query.filter_by(username=username).first()
+
     if not user:
         user = User.query.filter_by(email=username).first()
 
     if user and user.verify_password(password):
         login_user(user)
         role = 'admin' if user.is_admin else 'user'
+        current_user.setAllMessages([], [], [])
+        db.session.commit()
         return jsonify({'message': '登录成功', 'role': role}), 200
     else:
         return jsonify({'message': '登录失败，请检查用户名/邮箱和密码'}), 401

@@ -64,10 +64,6 @@ class User(db.Model, UserMixin):
         self.current_tongyi_messages=json.dumps(messages_tongyi)
 
 
-
-
-
-
 class Feedback(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
