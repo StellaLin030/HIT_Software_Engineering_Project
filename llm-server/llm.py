@@ -315,7 +315,7 @@ def update_conversation():
     messages_chatgpt = []
     messages_tongyi = []
     messages_wenxin = []
-    current_user.setAllMessages(messages_chatgpt,messages_wenxin,messages_tongyi)
+    current_user.setAllMessages(messages_chatgpt,messages_tongyi,messages_wenxin)
     db.session.commit()  # 提交数据库事务
     return jsonify({"message": "Conversation updated successfully"}), 200
 
