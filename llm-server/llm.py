@@ -276,7 +276,7 @@ def save_and_clear_conversation():
     messages_chatgpt = []
     messages_tongyi = []
     messages_wenxin = []
-    current_user.setAllMessages(messages_chatgpt,messages_wenxin,messages_tongyi)
+    current_user.setAllMessages(messages_chatgpt,messages_tongyi,messages_wenxin)
     db.session.commit()  # 提交数据库事务  
     # 返回成功响应或其他适当的响应
     return jsonify({'success': 'Conversation saved successfully.'}), 200
@@ -344,7 +344,7 @@ def get_conversation_by_id():
     messages_chatgpt=json.loads(conversation.chatgpt_messages)
     messages_tongyi=json.loads(conversation.tongyi_messages)
     messages_wenxin=json.loads(conversation.wenxin_messages)
-    current_user.setAllMessages(messages_chatgpt,messages_wenxin,messages_tongyi)
+    current_user.setAllMessages(messages_chatgpt,messages_tongyi,messages_wenxin)
     db.session.commit()  # 提交数据库事务
 
     return jsonify({
