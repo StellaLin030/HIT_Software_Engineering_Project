@@ -81,8 +81,6 @@ def login():
     if user and user.verify_password(password):
         login_user(user)
         role = 'admin' if user.is_admin else 'user'
-        user.setAllMessages([],[],[])
-        db.session.commit()  # 提交数据库事务
         return jsonify({'message': '登录成功', 'role': role}), 200
     else:
         return jsonify({'message': '登录失败，请检查用户名/邮箱和密码'}), 401
