@@ -23,6 +23,7 @@
         </form>
         <p class="login-message">{{ message }}</p>
         <p>还没有账号？ <router-link to="/register">点击这里注册</router-link></p>
+        <p>忘记密码了？ <router-link to="/retrieve-password">点击这里找回</router-link></p>
       </div>
     </div>
   </div>

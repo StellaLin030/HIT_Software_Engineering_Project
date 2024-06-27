@@ -11,6 +11,7 @@ import AdminFeedback from '../components/AdminFeedback.vue';
 import AdminUserInfo from '../components/UserInformation.vue';
 import AdminUnreadFeedback from '../components/AdminUnreadFeedback.vue';
 import UserCreaseInfo from '../components/UserCreaseInfo.vue';
+import RetrievePassword from "@/components/RetrievePassword.vue";
 Vue.use(VueRouter)
 
 const routes = [
@@ -25,6 +26,7 @@ const routes = [
   { path: '/admin-userinfo', name: 'AdminUserInfo', component: AdminUserInfo },
   { path: '/admin-unreadfeedback', name: 'AdminUnreadFeedback', component: AdminUnreadFeedback },
   { path: '/admin-creaseuserinfo', name: 'UserCreaseInfo', component: UserCreaseInfo },
+  { path: '/retrieve-password', name: 'RetrievePassword', component: RetrievePassword },
 
 ]
 

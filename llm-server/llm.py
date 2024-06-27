@@ -70,8 +70,6 @@ def getTongyiAnswer():
     return Response(chat_responses, content_type='text/event-stream', headers=headers)
 
 
-
-
 @llm_bp.route('/chatgpt')
 @cross_origin(supports_credentials=True)
 @login_required
