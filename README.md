@@ -8,4 +8,4 @@
 
 仅供作业提交 / 学习参考使用，严禁抄袭：）
 
-![img](figs/homepage.jpg)
+![img](figs/homepage_v2.png)
