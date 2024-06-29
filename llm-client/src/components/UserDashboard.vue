@@ -51,7 +51,7 @@
                       :class="message.role === 'user' ? 'user-color' : 'friend-color'">{{ message.role }}:</span>
               </div>
               <div v-if="message.role === 'user'" class="user-message">{{ message.content }}</div>
-              <div v-else class="friend-message" v-html="renderMessage(message.content)"></div>
+              <div v-else class="friend-message" v-html="renderMessage(message.content,message)"></div>
             </div>
           </div>
           <div class="mid" ref="messageContainer1">
@@ -66,7 +66,7 @@
                       :class="message.role === 'user' ? 'user-color' : 'friend-color'">{{ message.role }}:</span>
               </div>
               <div v-if="message.role === 'user'" class="user-message">{{message.content }}</div>
-              <div v-else class="friend-message" v-html="renderMessage(message.content)"></div>
+              <div v-else class="friend-message" v-html="renderMessage(message.content,message)"></div>
             </div>
           </div>
           <div class="right" ref="messageContainer2">
@@ -81,7 +81,7 @@
                       :class="message.role === 'user' ? 'user-color' : 'friend-color'">{{ message.role }}:</span>
               </div>
               <div v-if="message.role === 'user'" class="user-message">{{ message.content }}</div>
-              <div v-else class="friend-message" v-html="renderMessage(message.content)"></div>
+              <div v-else class="friend-message" v-html="renderMessage(message.content,message)"></div>
             </div>
           </div>
         </div>
@@ -262,13 +262,14 @@ export default {
           });
       }
   },
-     renderMessage(message) {
+     renderMessage(message,sseMessage) {
       // 这里假设 this.md 是你的 markdown 渲染器
-      if(this.current_id==null || this.flag){
+      if((this.current_id==null || this.flag) && sseMessage.zxakey=="zxa" ){
         return message;
       }
       return this.md.render(message);
   },
+
 
   deleteConversation(id) {
       axios.delete(`api/conversations/delete_conversation?id=`+id)
